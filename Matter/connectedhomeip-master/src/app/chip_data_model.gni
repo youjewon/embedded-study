@@ -1,0 +1,301 @@
+# Copyright (c) 2021 Project CHIP Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build_overrides/build.gni")
+import("//build_overrides/chip.gni")
+import("${chip_root}/build/chip/chip_codegen.gni")
+import("${chip_root}/src/lib/core/core.gni")
+import("${chip_root}/src/platform/python.gni")
+
+_app_root = get_path_info(".", "abspath")
+
+# Defines a source_set for CHIP data model.
+#
+# Arguments:
+#  zap_pregenerated_dir
+#    Path to the ZAP "gen" dir.
+#
+#  zap_file
+#    Path to the ZAP input file.
+#
+#  idl
+#    Path to the .matter IDL corresponding to the zap file. This is for
+#    dependencies on build-time code generation.
+#
+# Forwards all the remaining variables to the source_set.
+#
+template("chip_data_model") {
+  _data_model_name = target_name
+
+  declare_args() {
+    # Allow building ota-requestor-app with a non-spec-compliant floor
+    # (i.e. smaller than 2 minutes) for action delays.
+    non_spec_compliant_ota_action_delay_floor = -1
+  }
+
+  if (defined(invoker.idl)) {
+    _idl = invoker.idl
+  } else {
+    # Assume that IDL name is the same as the zap file name, but instead of
+    # '.zap' use '.matter' as extension. This is currently the case in the
+    # sample apps, but may change in the future
+    _idl = string_replace(invoker.zap_file, ".zap", ".matter")
+  }
+
+  config("${_data_model_name}_config") {
+    include_dirs = []
+
+    if (defined(invoker.zap_pregenerated_dir)) {
+      include_dirs += [ "${invoker.zap_pregenerated_dir}/.." ]
+    }
+  }
+
+  chip_zapgen("${_data_model_name}_zapgen") {
+    input = rebase_path(invoker.zap_file)
+    generator = "app-templates"
+
+    outputs = [
+      "zap-generated/access.h",
+      "zap-generated/gen_config.h",
+      "zap-generated/endpoint_config.h",
+      "zap-generated/CHIPClientCallbacks.h",
+    ]
+
+    if (chip_code_pre_generated_directory == "") {
+      prune_outputs = []
+    }
+
+    if (chip_controller) {
+      outputs += [ "zap-generated/CHIPClusters.h" ]
+    } else {
+      if (defined(prune_outputs)) {
+        prune_outputs += [ "zap-generated/CHIPClusters.h" ]
+      }
+    }
+
+    # TODO: It is unclear here why `zap_pregenerated_dir` has any relevance
+    #       in including IMClusterCommandHandler or not.
+    #
+    #       This logic has been carried over from previous code during compile
+    #       time codegen addition, however the rationale of why pregenerated
+    #       dir controls IMClusterCommandHandler needs to be explained and
+    #       potentially controlled by a clearer variable (is this for controllers?
+    #       is this during app compile but not others? I am unclear what
+    #       zap_pregenerated_dir is supposed to convey. Existence of a directory
+    #       does not obviously map to "need command handler cpp compiled in").
+    if (defined(invoker.zap_pregenerated_dir)) {
+      outputs += [ "zap-generated/IMClusterCommandHandler.cpp" ]
+    } else {
+      if (defined(prune_outputs)) {
+        prune_outputs += [ "zap-generated/IMClusterCommandHandler.cpp" ]
+      }
+    }
+
+    public_configs = [ ":${_data_model_name}_config" ]
+
+    if (!defined(deps)) {
+      deps = []
+    }
+
+    deps += [ "${chip_root}/src/app" ]
+  }
+
+  chip_codegen("${_data_model_name}_codegen") {
+    input = _idl
+    generator = "cpp-app"
+
+    outputs = [
+      "app/PluginApplicationCallbacks.h",
+      "app/callback-stub.cpp",
+    ]
+
+    public_configs = [ ":${_data_model_name}_config" ]
+
+    if (!defined(deps)) {
+      deps = []
+    }
+
+    deps += [
+      ":${_data_model_name}_zapgen",
+      "${chip_root}/src/app/common:cluster-objects",
+    ]
+  }
+
+  source_set(_data_model_name) {
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                             "zap_pregenerated_dir",
+                             "zap_clusters_with_custom_implementation",
+                             "zap_file",
+                             "is_server",
+                           ])
+
+    if (!defined(sources)) {
+      sources = []
+    }
+
+    if (!defined(is_server)) {
+      is_server = false
+    }
+
+    sources += [
+      "${_app_root}/clusters/barrier-control-server/barrier-control-server.h",
+      "${_app_root}/clusters/basic-information/basic-information.h",
+      "${_app_root}/clusters/client-monitoring-server/client-monitoring-server.h",
+      "${_app_root}/clusters/color-control-server/color-control-server.h",
+      "${_app_root}/clusters/door-lock-server/door-lock-server.h",
+      "${_app_root}/clusters/groups-server/groups-server.h",
+      "${_app_root}/clusters/identify-server/identify-server.h",
+      "${_app_root}/clusters/level-control/level-control.h",
+      "${_app_root}/clusters/on-off-server/on-off-server.h",
+      "${_app_root}/clusters/scenes/ExtensionFieldSets.h",
+      "${_app_root}/clusters/scenes/ExtensionFieldSetsImpl.cpp",
+      "${_app_root}/clusters/scenes/ExtensionFieldSetsImpl.h",
+      "${_app_root}/clusters/scenes/SceneTable.h",
+      "${_app_root}/clusters/scenes/SceneTableImpl.cpp",
+      "${_app_root}/clusters/scenes/SceneTableImpl.h",
+      "${_app_root}/clusters/scenes/scenes-tokens.h",
+      "${_app_root}/clusters/scenes/scenes.h",
+
+      # Disable CM cluster table tests until update is done
+      # https://github.com/project-chip/connectedhomeip/issues/24425
+      # "${_app_root}/util/ClientMonitoringRegistrationTable.cpp",
+      # "${_app_root}/util/ClientMonitoringRegistrationTable.h",
+      "${_app_root}/util/DataModelHandler.cpp",
+      "${_app_root}/util/attribute-size-util.cpp",
+      "${_app_root}/util/attribute-storage.cpp",
+      "${_app_root}/util/attribute-table.cpp",
+      "${_app_root}/util/binding-table.cpp",
+      "${_app_root}/util/binding-table.h",
+      "${_app_root}/util/ember-compatibility-functions.cpp",
+      "${_app_root}/util/ember-print.cpp",
+      "${_app_root}/util/error-mapping.cpp",
+      "${_app_root}/util/generic-callback-stubs.cpp",
+      "${_app_root}/util/message.cpp",
+      "${_app_root}/util/privilege-storage.cpp",
+      "${_app_root}/util/util.cpp",
+      "${chip_root}/zzz_generated/app-common/app-common/zap-generated/attributes/Accessors.cpp",
+    ]
+
+    if (defined(invoker.zap_file)) {
+      _zap_file = rebase_path(invoker.zap_file, root_build_dir)
+      _cluster_sources = exec_script("${_app_root}/zap_cluster_list.py",
+                                     [ "--zap_file=" + _zap_file ],
+                                     "list lines",
+                                     [ invoker.zap_file ])
+    }
+
+    _custom_impl_clusters = []
+    if (defined(invoker.zap_clusters_with_custom_implementation)) {
+      _custom_impl_clusters = invoker.zap_clusters_with_custom_implementation
+    }
+
+    if (_cluster_sources == []) {
+      # The variable is only used within the nested foreach-loop and will be
+      # unused before it goes out of scope when the outter-loop is not entered.
+      not_needed([ "_custom_impl_clusters" ])
+    }
+
+    foreach(cluster, _cluster_sources) {
+      _custom_impl = false
+      foreach(ci, _custom_impl_clusters) {
+        if (cluster == ci) {
+          _custom_impl = true
+        }
+      }
+
+      if (_custom_impl) {
+        # do not include any sources, we have a custom implementation for this cluster
+      } else if (cluster == "door-lock-server") {
+        sources += [
+          "${_app_root}/clusters/${cluster}/door-lock-server-callback.cpp",
+          "${_app_root}/clusters/${cluster}/door-lock-server.cpp",
+        ]
+      } else if (cluster == "mode-select-server") {
+        sources += [
+          "${_app_root}/clusters/${cluster}/${cluster}.cpp",
+          "${_app_root}/clusters/${cluster}/supported-modes-manager.h",
+        ]
+      } else if (cluster == "application-launcher-server") {
+        sources += [
+          "${_app_root}/app-platform/ContentApp.cpp",
+          "${_app_root}/app-platform/ContentAppPlatform.cpp",
+          "${_app_root}/clusters/${cluster}/${cluster}.cpp",
+        ]
+      } else if (cluster == "ota-requestor") {
+        sources += [
+          # TODO - align name of folder ?
+          "${_app_root}/clusters/${cluster}/${cluster}-server.cpp",
+          "${_app_root}/clusters/${cluster}/BDXDownloader.cpp",
+          "${_app_root}/clusters/${cluster}/BDXDownloader.h",
+          "${_app_root}/clusters/${cluster}/DefaultOTARequestor.cpp",
+          "${_app_root}/clusters/${cluster}/DefaultOTARequestorDriver.cpp",
+          "${_app_root}/clusters/${cluster}/DefaultOTARequestorStorage.cpp",
+          "${_app_root}/clusters/${cluster}/DefaultOTARequestorStorage.h",
+          "${_app_root}/clusters/${cluster}/DefaultOTARequestorUserConsent.h",
+          "${_app_root}/clusters/${cluster}/ExtendedOTARequestorDriver.cpp",
+          "${_app_root}/clusters/${cluster}/OTARequestorStorage.h",
+          "${_app_root}/clusters/${cluster}/OTATestEventTriggerDelegate.cpp",
+          "${_app_root}/clusters/${cluster}/OTATestEventTriggerDelegate.h",
+        ]
+      } else if (cluster == "bindings") {
+        sources += [
+          "${_app_root}/clusters/${cluster}/${cluster}.cpp",
+          "${_app_root}/clusters/${cluster}/BindingManager.cpp",
+          "${_app_root}/clusters/${cluster}/BindingManager.h",
+          "${_app_root}/clusters/${cluster}/PendingNotificationMap.cpp",
+          "${_app_root}/clusters/${cluster}/PendingNotificationMap.h",
+        ]
+      } else {
+        sources += [ "${_app_root}/clusters/${cluster}/${cluster}.cpp" ]
+      }
+    }
+
+    if (!defined(public_deps)) {
+      public_deps = []
+    }
+
+    public_deps += [
+      ":${_data_model_name}_codegen",
+      ":${_data_model_name}_zapgen",
+      "${chip_root}/src/app",
+      "${chip_root}/src/app/common:cluster-objects",
+      "${chip_root}/src/controller",
+      "${chip_root}/src/lib/core",
+      "${chip_root}/src/lib/support",
+      "${chip_root}/src/protocols/secure_channel",
+    ]
+
+    if (is_server) {
+      public_deps += [ "${chip_root}/src/app/server" ]
+    }
+
+    if (!defined(cflags)) {
+      cflags = []
+    }
+
+    cflags += [ "-Wconversion" ]
+
+    if (non_spec_compliant_ota_action_delay_floor >= 0) {
+      cflags += [ "-DNON_SPEC_COMPLIANT_OTA_ACTION_DELAY_FLOOR=${non_spec_compliant_ota_action_delay_floor}" ]
+    }
+
+    if (!defined(public_configs)) {
+      public_configs = []
+    }
+
+    public_configs += [ ":${_data_model_name}_config" ]
+  }
+}
