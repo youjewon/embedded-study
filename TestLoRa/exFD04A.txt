@@ -1,5 +1,5 @@
 // FD04A 드라이버 핀 설정
-const int motorA = 4;
+const int motorA = 4; 
 const int motorB = 7;
 const int motorC = 8;
 const int motorD = 11;
