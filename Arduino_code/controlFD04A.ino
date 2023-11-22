@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <SoftwareSerial.h>
 
 SoftwareSerial lora(2, 3);
@@ -15,6 +14,8 @@ const int motorDPWM = 10;
 
 int speed[5] = { 50, 100, 150, 200, 255 };
 int speed_index = 4;
+
+char prevData = '\0';
 
 void StopAllMotors();
 void HandFoward();
@@ -72,24 +73,28 @@ void loop() {
       case 's':
         StopAllMotors();
         break;
-      case 'n':
+      case 'j':
         if (speed_index > 0) {
           speed_index--;
           speed[speed_index];
         }
 
         break;
-      case 'o':
+      case 'J':
         if (speed_index < 4) {
           speed_index++;
           speed[speed_index];
         }
         break;
       case 'k':
-        
+
         break;
       case 'm':
         AllClose();
+        break;
+      case 'o':
+        break;
+      case 'n':
         break;
     }
     if (data != '\0') {
@@ -108,52 +113,52 @@ void StopAllMotors() {
 }
 
 void HandFoward() {
-  analogWrite(motorAPWM, speed[speed_index]);
-  analogWrite(motorDPWM, speed[speed_index]);
   digitalWrite(motorA, HIGH);
   digitalWrite(motorD, HIGH);
+  analogWrite(motorAPWM, speed[speed_index]);
+  analogWrite(motorDPWM, speed[speed_index]);
 }
 void HandBack() {
-  analogWrite(motorAPWM, speed[speed_index]);
-  analogWrite(motorDPWM, speed[speed_index]);
   digitalWrite(motorA, LOW);
   digitalWrite(motorD, LOW);
+  analogWrite(motorAPWM, speed[speed_index]);
+  analogWrite(motorDPWM, speed[speed_index]);
 }
 void LeftPool() {
-  analogWrite(motorAPWM, speed[speed_index]);
   digitalWrite(motorA, HIGH);
+  analogWrite(motorAPWM, speed[speed_index]);
 }
 void LeftPush() {
-  analogWrite(motorAPWM, speed[speed_index]);
   digitalWrite(motorA, LOW);
+  analogWrite(motorAPWM, speed[speed_index]);
 }
-void RighttPool() {
-  analogWrite(motorDPWM, speed[speed_index]);
+void RightPool() {
   digitalWrite(motorD, HIGH);
+  analogWrite(motorDPWM, speed[speed_index]);
 }
 void RightPush() {
-  analogWrite(motorDPWM, speed[speed_index]);
   digitalWrite(motorD, LOW);
+  analogWrite(motorDPWM, speed[speed_index]);
 }
 void FootFoward() {
-  analogWrite(motorBPWM, speed[speed_index]);
-  analogWrite(motorVPWM, speed[speed_index]);
   digitalWrite(motorB, HIGH);
   digitalWrite(motorC, HIGH);
+  analogWrite(motorBPWM, speed[speed_index]);
+  analogWrite(motorCPWM, speed[speed_index]);
 }
 void FootBack() {
   analogWrite(motorBPWM, speed[speed_index]);
-  analogWrite(motorVPWM, speed[speed_index]);
+  analogWrite(motorCPWM, speed[speed_index]);
   digitalWrite(motorB, LOW);
   digitalWrite(motorC, LOW);
 }
 void AllClose() {
+  digitalWrite(motorA, HIGH);
+  digitalWrite(motorB, HIGH);
+  digitalWrite(motorC, HIGH);
+  digitalWrite(motorD, HIGH);
   analogWrite(motorAPWM, 255);
   analogWrite(motorBPWM, 255);
   analogWrite(motorCPWM, 255);
   analogWrite(motorDPWM, 255);
-  digitalWrite(motorA, HIGHT);
-  digitalWrite(motorB, HIGHT);
-  digitalWrite(motorC, HIGHT);
-  digitalWrite(motorD, HIGHT);
 }
