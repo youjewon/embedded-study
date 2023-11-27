@@ -12,7 +12,7 @@ const int motorBPWM = 6;
 const int motorCPWM = 9;
 const int motorDPWM = 10;
 
-int speed[5] = { 50, 100, 150, 200, 255 };
+int speed[5] = { 0, 100, 150, 200, 255 };
 int speed_index = 4;
 
 char prevData = '\0';
@@ -36,6 +36,11 @@ void setup() {
   pinMode(motorB, OUTPUT);
   pinMode(motorC, OUTPUT);
   pinMode(motorD, OUTPUT);
+
+  pinMode(motorAPWM, OUTPUT);
+  pinMode(motorBPWM, OUTPUT);
+  pinMode(motorCPWM, OUTPUT);
+  pinMode(motorDPWM, OUTPUT);
 
   // 초기에 모든 모터 정지
   StopAllMotors();
@@ -76,14 +81,12 @@ void loop() {
       case 'j':
         if (speed_index > 0) {
           speed_index--;
-          speed[speed_index];
         }
 
         break;
       case 'J':
         if (speed_index < 4) {
           speed_index++;
-          speed[speed_index];
         }
         break;
       case 'k':
@@ -114,51 +117,91 @@ void StopAllMotors() {
 
 void HandFoward() {
   digitalWrite(motorA, HIGH);
-  digitalWrite(motorD, HIGH);
+  digitalWrite(motorB, HIGH);
+  digitalWrite(motorC, HIGH);
+  digitalWrite(motorD, LOW);
   analogWrite(motorAPWM, speed[speed_index]);
+  analogWrite(motorCPWM, speed[0]);
+  analogWrite(motorBPWM, speed[0]);
   analogWrite(motorDPWM, speed[speed_index]);
 }
 void HandBack() {
   digitalWrite(motorA, LOW);
-  digitalWrite(motorD, LOW);
+  digitalWrite(motorB, HIGH);
+  digitalWrite(motorC, HIGH);
+  digitalWrite(motorD, HIGH);
   analogWrite(motorAPWM, speed[speed_index]);
+  analogWrite(motorCPWM, speed[0]);
+  analogWrite(motorBPWM, speed[0]);
   analogWrite(motorDPWM, speed[speed_index]);
 }
 void LeftPool() {
   digitalWrite(motorA, HIGH);
+  digitalWrite(motorB, HIGH);
+  digitalWrite(motorC, HIGH);
+  digitalWrite(motorD, HIGH);
   analogWrite(motorAPWM, speed[speed_index]);
+  analogWrite(motorCPWM, speed[0]);
+  analogWrite(motorBPWM, speed[0]);
+  analogWrite(motorDPWM, speed[0]);
 }
 void LeftPush() {
   digitalWrite(motorA, LOW);
+  digitalWrite(motorB, HIGH);
+  digitalWrite(motorC, HIGH);
+  digitalWrite(motorD, HIGH);
   analogWrite(motorAPWM, speed[speed_index]);
+  analogWrite(motorCPWM, speed[0]);
+  analogWrite(motorBPWM, speed[0]);
+  analogWrite(motorDPWM, speed[0]);
 }
 void RightPool() {
-  digitalWrite(motorD, HIGH);
+  digitalWrite(motorA, HIGH);
+  digitalWrite(motorB, HIGH);
+  digitalWrite(motorC, HIGH);
+  digitalWrite(motorD, LOW);
+  analogWrite(motorAPWM, speed[0]);
+  analogWrite(motorCPWM, speed[0]);
+  analogWrite(motorBPWM, speed[0]);
   analogWrite(motorDPWM, speed[speed_index]);
 }
 void RightPush() {
-  digitalWrite(motorD, LOW);
+  digitalWrite(motorA, HIGH);
+  digitalWrite(motorB, HIGH);
+  digitalWrite(motorC, HIGH);
+  digitalWrite(motorD, HIGH);
+  analogWrite(motorAPWM, speed[0]);
+  analogWrite(motorCPWM, speed[0]);
+  analogWrite(motorBPWM, speed[0]);
   analogWrite(motorDPWM, speed[speed_index]);
 }
 void FootFoward() {
+  digitalWrite(motorA, HIGH);
   digitalWrite(motorB, HIGH);
-  digitalWrite(motorC, HIGH);
-  analogWrite(motorBPWM, speed[speed_index]);
+  digitalWrite(motorC, LOW);
+  digitalWrite(motorD, HIGH);
+  analogWrite(motorAPWM, speed[0]);
   analogWrite(motorCPWM, speed[speed_index]);
+  analogWrite(motorBPWM, speed[speed_index]);
+  analogWrite(motorDPWM, speed[0]);
 }
 void FootBack() {
-  analogWrite(motorBPWM, speed[speed_index]);
-  analogWrite(motorCPWM, speed[speed_index]);
+  digitalWrite(motorA, HIGH);
   digitalWrite(motorB, LOW);
-  digitalWrite(motorC, LOW);
+  digitalWrite(motorC, HIGH);
+  digitalWrite(motorD, HIGH);
+  analogWrite(motorAPWM, speed[0]);
+  analogWrite(motorCPWM, speed[speed_index]);
+  analogWrite(motorBPWM, speed[speed_index]);
+  analogWrite(motorDPWM, speed[0]);
 }
 void AllClose() {
   digitalWrite(motorA, HIGH);
   digitalWrite(motorB, HIGH);
   digitalWrite(motorC, HIGH);
   digitalWrite(motorD, HIGH);
-  analogWrite(motorAPWM, 255);
-  analogWrite(motorBPWM, 255);
-  analogWrite(motorCPWM, 255);
-  analogWrite(motorDPWM, 255);
+  analogWrite(motorAPWM, speed[speed_index]);
+  analogWrite(motorCPWM, speed[speed_index]);
+  analogWrite(motorBPWM, speed[speed_index]);
+  analogWrite(motorDPWM, speed[speed_index]);
 }
