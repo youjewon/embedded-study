@@ -79,23 +79,21 @@ void loop() {
         StopAllMotors();
         break;
       case 'j':
+        break;
+      case 'J':
+        break;
+      case 'k':
         if (speed_index > 0) {
           speed_index--;
         }
-
-        break;
-      case 'J':
-        if (speed_index < 4) {
-          speed_index++;
-        }
-        break;
-      case 'k':
-
         break;
       case 'm':
         AllClose();
         break;
       case 'o':
+        if (speed_index < 4) {
+          speed_index++;
+        }
         break;
       case 'n':
         break;
