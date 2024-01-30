@@ -1,6 +1,0 @@
-﻿  BaekJoon_6.cpp
-C:\Users\youje\OneDrive\Documents\GitHub\embedded-study\C++\C++ Study\BaekJoon_6\BaekJoon_6.cpp(7,13): warning C4129: '`': 문자 이스케이프 시퀀스를 인식할 수 없습니다.
-C:\Users\youje\OneDrive\Documents\GitHub\embedded-study\C++\C++ Study\BaekJoon_6\BaekJoon_6.cpp(7,13): warning C4129: '/': 문자 이스케이프 시퀀스를 인식할 수 없습니다.
-C:\Users\youje\OneDrive\Documents\GitHub\embedded-study\C++\C++ Study\BaekJoon_6\BaekJoon_6.cpp(9,13): warning C4129: '`': 문자 이스케이프 시퀀스를 인식할 수 없습니다.
-C:\Users\youje\OneDrive\Documents\GitHub\embedded-study\C++\C++ Study\BaekJoon_6\BaekJoon_6.cpp(9,13): warning C4129: '/': 문자 이스케이프 시퀀스를 인식할 수 없습니다.
-  BaekJoon_6.vcxproj -> C:\Users\youje\OneDrive\Documents\GitHub\embedded-study\C++\C++ Study\Debug\BaekJoon_6.exe
