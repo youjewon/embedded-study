@@ -16,12 +16,12 @@ int main()
 
     for(int i = 0;i < n; i++)
     {
-        int m;
-        cin >> m;
+        int k;
+        cin >> k;
 
-        for(int div = 1;div <= m;div++)
+        for(int div = 1;div <= k;div++)
         {
-            if(m%div == 0)
+            if(k%div == 0)
                 cnt++;
         }
         if(cnt == 2)
