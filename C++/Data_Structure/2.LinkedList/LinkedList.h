@@ -1,10 +1,3 @@
-/*
-연결리스트의 구현하기 위한 개념
-
-노드(node) 리스트의 원소(값)과 다음원소를 가르키는 정보(주소) 로 구성됨
-node(data, address)
-*/ 
-
 #include<iostream>
 using namespace std;
 
@@ -82,7 +75,7 @@ void LinkedList::addNode(int n)
     }
 }
 
-void insertNode(Node* prevNode,int n)
+void LinkedList::insertNode(Node* prevNode,int n)
 {
     Node* temp = new Node;
     temp -> data = n;
@@ -92,7 +85,7 @@ void insertNode(Node* prevNode,int n)
     prevNode -> nextNode = temp;
 }
 
-void deleteNode(Node* prevNode)
+void LinkedList::deleteNode(Node* prevNode)
 {
     // temp 에 삭제 할 이전 node의 nextNode를 저장
     Node* temp = prevNode -> nextNode;
@@ -100,7 +93,7 @@ void deleteNode(Node* prevNode)
     prevNode -> nextNode = temp -> nextNode;
 }
 
-void display(Node* head)
+void LinkedList::display(Node* head)
 {
     if(head == NULL)
         cout << "비었습니다.\n";
@@ -108,4 +101,5 @@ void display(Node* head)
         cout << head->data << endl;
         display(head->nextNode);
     }
+    cout << endl;
 }
