@@ -91,6 +91,7 @@ void LinkedList::deleteNode(Node* prevNode)
     Node* temp = prevNode -> nextNode;
     // 이전 node의 nextNode를 삭제 할 node의 nextNode로 저장
     prevNode -> nextNode = temp -> nextNode;
+    delete temp;
 }
 
 void LinkedList::display(Node* head)
