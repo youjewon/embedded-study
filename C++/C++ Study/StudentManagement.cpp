@@ -2,11 +2,15 @@
     학생 관리 시스템 구현하기
     11/30
     1. 학생 객채를 만들고 학생을 추가, 삭제, 조회 하는 코드 작성
+    12/03
+    파일 입출력 기능으로 시작시 데이터 불러오기 기능 구현
+
 */
 
 #include<iostream>
 #include<vector>
 #include<string>
+#include<fstream>
 
 // 학생 클래스 이름, 학번, 학점을 갖고 각 정보를 캡슐화하여 getter로 반환
 class Student {
@@ -26,7 +30,8 @@ public :
 class Management {
 private :
     std::vector<Student> students;
-
+    std::ifstream loadFile;
+    std::ofstream File;
 public :
     // 학생 추가
     void addStudent(const Student& student) {
